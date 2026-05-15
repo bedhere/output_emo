@@ -38,3 +38,23 @@ build/
 
 ### Mac OS ###
 .DS_Store
+
+### Logs ###
+*.log
+logs/
+
+### Maven ###
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.jar
+
+### Package Files ###
+*.jar
+*.war
+*.nar
+*.ear
+*.tar.gz
+*.rar
+*.zip
+
+### Claude Code ###
+.claude/

@@ -13,11 +13,29 @@ import com.sun.jna.platform.win32.WinUser.MSG;
 public class WindowsGlobalKeyboardListener {
     private static final int VK_BACK = 0x08;
     private static final int VK_RETURN = 0x0D;
+    private static final int VK_CONTROL = 0x11;
+    private static final int VK_LCONTROL = 0xA2;
+    private static final int VK_RCONTROL = 0xA3;
+    private static final int VK_E = 0x45;
 
     public interface Listener {
         void onCharacter(char c);
         void onBackspace();
         void onEnter();
+        void onClearRequest();
+    }
+
+    private volatile boolean ctrlPressed = false;
+
+    private volatile boolean windowFocused = false;
+    private volatile boolean hookEnabled = true;
+
+    public void setWindowFocused(boolean focused) {
+        this.windowFocused = focused;
+    }
+
+    public void setHookEnabled(boolean enabled) {
+        this.hookEnabled = enabled;
     }
 
     private final Listener listener;
@@ -63,8 +81,12 @@ public class WindowsGlobalKeyboardListener {
         keyboardProc = (nCode, wParam, info) -> {
             if (nCode >= 0) {
                 int msg = wParam.intValue();
+                int vk = info.vkCode;
+                if (vk == VK_CONTROL || vk == VK_LCONTROL || vk == VK_RCONTROL) {
+                    ctrlPressed = (msg == WinUser.WM_KEYDOWN || msg == WinUser.WM_SYSKEYDOWN);
+                }
                 if (msg == WinUser.WM_KEYDOWN || msg == WinUser.WM_SYSKEYDOWN) {
-                    processKey(info.vkCode);
+                    processKey(vk);
                 }
             }
             return user32.CallNextHookEx(hook, nCode, wParam, new LPARAM(Pointer.nativeValue(info.getPointer())));
@@ -94,9 +116,16 @@ public class WindowsGlobalKeyboardListener {
     }
 
     private void processKey(int vkCode) {
-        if (listener == null) {
+        if (listener == null) return;
+
+        // Ctrl+E 全局快捷键：无论hook开关、无论窗口焦点，始终生效
+        if (ctrlPressed && vkCode == VK_E) {
+            listener.onClearRequest();
             return;
         }
+
+        if (!hookEnabled || windowFocused) return;
+
         if (vkCode == VK_BACK) {
             listener.onBackspace();
             return;

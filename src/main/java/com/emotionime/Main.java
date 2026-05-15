@@ -1,12 +1,21 @@
-
 package com.emotionime;
 
 import com.emotionime.ui.AppUI;
+import javafx.application.Application;
+import javafx.stage.Stage;
 
-import javax.swing.SwingUtilities;
+public class Main extends Application {
 
-public class Main {
+    @Override
+    public void start(Stage primaryStage) {
+        System.setProperty("prism.lcdtext", "true");
+        System.setProperty("prism.text", "t2k");
+        new AppUI(primaryStage);
+    }
+
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(AppUI::new);
+        System.setProperty("prism.lcdtext", "true");
+        System.setProperty("prism.text", "t2k");
+        launch(args);
     }
 }
